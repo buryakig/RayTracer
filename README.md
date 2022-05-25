@@ -1,2 +1,2 @@
-# SomeGLCompute
-Some examples of OpenGL Compute shaders.
+# RayTracer
+Raytracing programm based on OpenGL compute shaders.
