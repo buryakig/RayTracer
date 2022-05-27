@@ -66,11 +66,12 @@ public:
 			std::cout << "Main texture recreated.\n";
 		}
 
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 		glUseProgram(testCompute->programID);
 		UpdateComputeVariables(testCompute->programID);
 
 		glDispatchCompute(ceil(m_ViewportWidth / 16.0), ceil(m_ViewportHeight / 16.0), 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 	}
 
 	void UpdateComputeVariables(int programID)
