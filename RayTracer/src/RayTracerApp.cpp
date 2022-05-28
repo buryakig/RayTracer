@@ -2,6 +2,7 @@
 #include "ImApp/EntryPoint.h"
 #include "Utils/Resources/Resources.h"
 #include "RenderTexture.h"
+#include <random>
 
 void MessageCallback(GLenum source,
 	GLenum type,
@@ -26,6 +27,7 @@ public:
 		testCompute = Resources::LoadComputeShader("RayTracer/res/ComputeShaders/raytracer.comp");
 	
 		glUniform1i(glGetUniformLocation(testCompute->programID, "destTex"), 0);
+
 	}
 	
 
