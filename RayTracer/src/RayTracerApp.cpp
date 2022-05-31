@@ -40,6 +40,10 @@ public:
 				ImGui::Text("mainTex pointer = %p", mainTex->id);
 				ImGui::Text("Viewport size = %d x %d", m_ViewportWidth, m_ViewportHeight);
 			}
+			if (ImGui::CollapsingHeader("Parameters", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				ImGui::SliderFloat("Roughness right", &roughness, 0.0f, 1.0f, "ratio = %.3f");
+			}
 
 		ImGui::End();
 
@@ -80,7 +84,7 @@ public:
 	{
 		glUniform4f(glGetUniformLocation(programID, "imageSize"),
 			m_ViewportWidth, m_ViewportHeight, 1.0 / m_ViewportWidth, 1.0 / m_ViewportHeight);
-		glUniform1f(glGetUniformLocation(programID, "mandelModule"), (float)mandelModule);
+		glUniform1f(glGetUniformLocation(programID, "roughness_right"), (float)roughness);
 
 	}
 
@@ -88,7 +92,7 @@ public:
 	std::shared_ptr<ComputeShader> testCompute;
 	std::unique_ptr<RenderTexture> mainTex;
 	
-	float mandelModule = 4.0;
+	float roughness = 0.9;
 
 	glm::vec2 cParam;
 
