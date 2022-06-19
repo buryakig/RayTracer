@@ -16,13 +16,13 @@ uniform float roughness_right;
 
 
 
-#define VERTICAL_FIELD_OF_VIEW 90.0
+#define VERTICAL_FIELD_OF_VIEW 20.0
 #define NUM_SPHERES 4
 #define CAST_DEPTH 64
 #define MAX_ITERATIONS_PER_PIXEL_DIM 16
 #define APERTURE 2.0
 
-#define LOOK_FROM vec3(-2,2,1)
+#define LOOK_FROM vec3(3,3,2)
 #define LOOK_AT vec3(0,0,-1)
 #define VECTOR_UP vec3(0,1,0)
 
@@ -57,9 +57,9 @@ struct Sphere
 };
 
 const Sphere spheres[NUM_SPHERES] = {
-       Sphere(vec4(0.0, 0.0, -1.5, 0.5), LAMBERTIAN_MAT, vec4(0.7, 0.3, 0.3, 1.0), 0.0, 1.5),
-       Sphere(vec4(-1.0, 0.0, -1.5, 0.5), REFRACTIVE_MAT, vec4(1.0, 1.0, 1.0, 1.0), 0.0, 1.5),
-       Sphere(vec4(1.0, 0.0, -1.5, 0.5), REFLECTIVE_MAT, vec4(0.8, 0.6, 0.2, 1.0), roughness_right, 1.5),
+       Sphere(vec4(0.0, 0.0, -1.0, 0.5), LAMBERTIAN_MAT, vec4(0.7, 0.3, 0.3, 1.0), 0.0, 1.5),
+       Sphere(vec4(-1.0, 0.0, -1.0, 0.5), REFRACTIVE_MAT, vec4(1.0, 1.0, 1.0, 1.0), 0.0, 1.5),
+       Sphere(vec4(1.0, 0.0, -1.0, 0.5), REFLECTIVE_MAT, vec4(0.8, 0.6, 0.2, 1.0), roughness_right, 1.5),
        Sphere(vec4(0.0, -100.5, -1.5, 100.0), LAMBERTIAN_MAT, vec4(0.8, 0.8, 0.5, 1.0), 0.0, 1.5)
     };
 
@@ -90,6 +90,7 @@ vec3 random_on_unit_sphere();
 vec3 random_on_unit_sphere(vec2 vec_seed);
 vec3 random_on_unit_sphere(vec3 vec_seed);
 vec3 random_in_unit_sphere(vec3 vec_seed);
+vec3 random_in_unit_disk(vec2 vec_seed);
 
 // Traicing functions
 vec4 ray_color(Ray r, int depth);
@@ -282,16 +283,21 @@ Ray get_ray(vec2 uv)
 
     
     vec3 viewDir = normalize(LOOK_FROM - LOOK_AT);
-    vec3 rightDir = normalize(cross(VECTOR_UP, viewDir));
+    vec3 rightDir =  normalize(cross(VECTOR_UP, viewDir));
     vec3 upDir = cross(viewDir, rightDir);
 
     
     const vec3 ray_origin = LOOK_FROM;
-    const vec3 horizontal = viewport_width * rightDir;
-    const vec3 vertical = viewport_height * upDir;  
+    const vec3 horizontal = focus_dist * viewport_width * rightDir;
+    const vec3 vertical = focus_dist * viewport_height * upDir;  
 
-    vec3 lower_left_corner = ray_origin - horizontal / 2.0 - vertical / 2.0 - viewDir;
-    return Ray(ray_origin, lower_left_corner + horizontal * uv.x + vertical * uv.y - ray_origin);
+    vec3 lower_left_corner = ray_origin - horizontal / 2.0 - vertical / 2.0 - focus_dist * viewDir;
+    
+    vec3 rd = lens_radius * random_in_unit_disk(uv);
+    vec3 offset = rightDir * rd.x + upDir * rd.y;
+
+    return Ray(ray_origin + offset, 
+            lower_left_corner + horizontal * uv.x + vertical * uv.y - ray_origin - offset);
 }
 
 bool isInRange(float t, float t_min, float t_max)
@@ -385,10 +391,10 @@ vec3 random_in_unit_sphere(vec3 vec_seed)
     }
 }
 
-vec3 random_in_unit_disk(vec3 vec_seed) 
+vec3 random_in_unit_disk(vec2 vec_seed) 
 {
-    float ro = random(vec_seed.x);
-    float phi = random(vec_seed.y) * 2 * PI;
+    float ro = random(vec_seed + vec2(3256.56, 123.321));
+    float phi = random(vec_seed + 444.5698) * 2 * PI;
 
     vec3 p = vec3(ro * cos(phi), ro * sin(phi), 0);
     return p;
