@@ -6,5 +6,6 @@ Raytracing (path tracing) programm based on OpenGL compute shaders.
 - Scattering
 - Reflection
 - Refraction
+- Defocus Blur
 - Frensel Schlick's approximation
 
