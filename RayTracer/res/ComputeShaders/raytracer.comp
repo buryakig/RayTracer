@@ -6,6 +6,17 @@ layout (local_size_x = 16, local_size_y = 16) in;
 uniform vec4 imageSize;
 uniform float roughness_right;
 
+layout (std140, binding = 1) uniform CameraBuffer
+{
+    vec3 cposition;
+    float a;
+    vec3 cforward;
+    float f;
+    vec3 cup;
+    float d;
+    vec3 cright;
+};  
+
 // Constants
 #define PI 3.14159265359
 
@@ -16,13 +27,13 @@ uniform float roughness_right;
 
 
 
-#define VERTICAL_FIELD_OF_VIEW 20.0
+#define VERTICAL_FIELD_OF_VIEW 60.0
 #define NUM_SPHERES 4
 #define CAST_DEPTH 64
-#define MAX_ITERATIONS_PER_PIXEL_DIM 16
+#define MAX_ITERATIONS_PER_PIXEL_DIM 2
 #define APERTURE 2.0
 
-#define LOOK_FROM vec3(3,3,2)
+//#define LOOK_FROM vec3(3,3,2)
 #define LOOK_AT vec3(0,0,-1)
 #define VECTOR_UP vec3(0,1,0)
 
@@ -104,8 +115,8 @@ void refractive_scatter(hit_info hit, inout Ray scatter_ray);
 
 float fresnel_schlick_approximation(float cosine, float ri_ratio);
 
-bool hit_sphere(Sphere s, Ray r, out hit_info hit, float t_min = 0.001, float t_max = 10000.0);
-bool hit_world(Sphere s[NUM_SPHERES], Ray r, out hit_info hit, float t_min = 0.0, float t_max = 10000.0);
+bool hit_sphere(Sphere s, Ray r, out hit_info hit, float t_min, float t_max);
+bool hit_world(Sphere s[NUM_SPHERES], Ray r, out hit_info hit, float t_min, float t_max);
 
 void main()
 {
@@ -133,7 +144,8 @@ void main()
     color = sqrt(color);
     
     ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
-    imageStore(destTex, storePos, color);
+
+    imageStore(destTex, storePos, color); //vec4(cforward.xyz * 0.5 + 0.5, 1.0));
 }
 
 vec4 ray_color(Ray r, int depth)
@@ -161,7 +173,7 @@ vec4 ray_color(Ray r, int depth)
      return color;
 }
 
-bool hit_world(Sphere s[NUM_SPHERES], Ray r, out hit_info hit, float t_min = 0.001, float t_max = 10000000000.0)
+bool hit_world(Sphere s[NUM_SPHERES], Ray r, out hit_info hit, float t_min, float t_max)
 {
     bool hit_anything = false;
     float closest_to_camera = t_max;
@@ -179,7 +191,7 @@ bool hit_world(Sphere s[NUM_SPHERES], Ray r, out hit_info hit, float t_min = 0.0
 }
 
 
-bool hit_sphere(Sphere s, Ray r, out hit_info hit, float t_min = 0.001, float t_max = 100000000000.0)
+bool hit_sphere(Sphere s, Ray r, out hit_info hit, float t_min, float t_max)
 {
     vec3 oc = r.orig - s.geom.xyz;
     float a = dot(r.dir, r.dir);
@@ -275,25 +287,25 @@ vec3 ray_point(Ray r, float t)
 Ray get_ray(vec2 uv)
 {
     const float lens_radius = APERTURE / 2.0;
-    const float focus_dist = distance(LOOK_FROM, LOOK_AT);
+    const float focus_dist = 5.0f;
 
     const float aspect_raito = imageSize.x / imageSize.y;
     const float viewport_height = 2.0 * tan(degrees_to_radians(VERTICAL_FIELD_OF_VIEW) / 2);
     const float viewport_width = aspect_raito * viewport_height;
 
     
-    vec3 viewDir = normalize(LOOK_FROM - LOOK_AT);
-    vec3 rightDir =  normalize(cross(VECTOR_UP, viewDir));
-    vec3 upDir = cross(viewDir, rightDir);
+    vec3 viewDir = normalize(cforward.xyz);
+    vec3 rightDir =  normalize(cright.xyz);
+    vec3 upDir = normalize(cup.xyz);
 
     
-    const vec3 ray_origin = LOOK_FROM;
+    const vec3 ray_origin = cposition.xyz;
     const vec3 horizontal = focus_dist * viewport_width * rightDir;
     const vec3 vertical = focus_dist * viewport_height * upDir;  
 
-    vec3 lower_left_corner = ray_origin - horizontal / 2.0 - vertical / 2.0 - focus_dist * viewDir;
+    vec3 lower_left_corner = ray_origin - horizontal / 2.0 - vertical / 2.0 + focus_dist * viewDir;
     
-    vec3 rd = lens_radius * random_in_unit_disk(uv);
+    vec3 rd = vec3(0.0f); //lens_radius * random_in_unit_disk(uv);
     vec3 offset = rightDir * rd.x + upDir * rd.y;
 
     return Ray(ray_origin + offset, 
