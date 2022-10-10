@@ -3,6 +3,9 @@
 #include "ImApp/Input/Input.h"
 #include <glm/gtx/quaternion.hpp>
 
+#define PI 3.14f
+#define HF_PI 1.57f
+
 glm::vec2 lastMousePos{ 0.0f };
 float totalPitch = 0.0f;
 
@@ -69,15 +72,15 @@ void HandleThirdPersonMovement(std::unique_ptr<Camera>& cam, float dt)
 	if (delta.x != 0.0f || delta.y != 0.0f)
 	{
 		float pitchDelta = delta.y* rotSpeed;
-		if(totalPitch + pitchDelta > 3.1f)
+		if(totalPitch + pitchDelta > HF_PI)
 		{
-			pitchDelta = 3.1f - totalPitch;
-			totalPitch = 3.1f;
+			pitchDelta = HF_PI - totalPitch;
+			totalPitch = HF_PI;
 		}
-		else if (totalPitch + pitchDelta < -3.1f)
+		else if (totalPitch + pitchDelta < -HF_PI)
 		{
-			pitchDelta = -3.1f - totalPitch;
-			totalPitch = -3.1f;
+			pitchDelta = -HF_PI - totalPitch;
+			totalPitch = -HF_PI;
 		}
 		else
 		{
